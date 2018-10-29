@@ -1,3 +1,3 @@
 ### build
 
-running mvn package
+mvn package

@@ -216,20 +216,19 @@ public class compressFile {
 
         Job job = Job.getInstance(conf, "file Compress");
         job.setJarByClass(compressFile.class);
-//
+
 //        //=====================================================
         FileSystem fs = FileSystem.get(new URI(DestHdfs),conf);
         FileStatus[] listStatus = fs.listStatus( new Path(args[1]));
-
         job.setNumReduceTasks(filePartitioner.initMap(listStatus));
 //        //=====================================================
 
         //如果output存在先删除
         FileSystem outFs = outputPath.getFileSystem(conf);
-        if (outFs.exists(outputPath)){
-            System.out.println("the output already Exists");
-            outFs.delete(outputPath,true);
-        }
+//        if (outFs.exists(outputPath)){
+//            System.out.println("the output already Exists");
+//            outFs.delete(outputPath,true);
+//        }
 
         FileInputFormat.addInputPath(job, inputPath);
         FileOutputFormat.setOutputPath(job, outputPath);
@@ -249,10 +248,9 @@ public class compressFile {
         //在Combiner阶段设置好任务对应的文件名
 //        job.setCombinerClass(compressFile.writeFileCombiner.class);
 
-//        FileOutputFormat.setCompressOutput(job, true);  //job使用压缩
-//        FileOutputFormat.setOutputCompressorClass(job, GzipCodec.class); //设置压缩格式
+        FileOutputFormat.setCompressOutput(job, true);  //job使用压缩
+        FileOutputFormat.setOutputCompressorClass(job, GzipCodec.class); //设置压缩格式
         job.setOutputFormatClass(MyfileOutputFormat.class);
-
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
