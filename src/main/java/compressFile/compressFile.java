@@ -121,27 +121,6 @@ public class compressFile {
         }
     }
 
-    public static class writeFileCombiner
-            extends Reducer<Text, Text, Text, Text> {
-
-        @Override
-        public void reduce(Text key, Iterable<Text> values,
-                           Context context
-        ) throws IOException, InterruptedException {
-//            String TaskId = context.getTaskAttemptID().getTaskID().toString();
-//            TaskId = TaskId.replace("_m_","_r_");
-//            if (map.getElem(TaskId)==null){
-//                String[] sliceList = key.toString().split("/");
-//                String lastString = sliceList[sliceList.length-1];
-//                System.out.println(TaskId +"____"+lastString);
-//                map.addElem(TaskId,lastString);
-//            }
-            for (Text t: values){
-                context.write(key, t);
-            }
-        }
-    }
-
 
     public static class MyfileOutputFormat extends TextOutputFormat<Text,Text>{
         private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
@@ -202,6 +181,9 @@ public class compressFile {
 
         conf.set("mapred.textoutputformat.ignoreseparator", "true");
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+//        if (args.length !=4){
+//            throw new Exception("need 4 args");
+//        }
         String DestHdfs = args[0];
         String InputDir = args[0]+args[1];
         String OutputDir = args[0]+args[2];
@@ -225,10 +207,10 @@ public class compressFile {
 
         //如果output存在先删除
         FileSystem outFs = outputPath.getFileSystem(conf);
-//        if (outFs.exists(outputPath)){
-//            System.out.println("the output already Exists");
-//            outFs.delete(outputPath,true);
-//        }
+        if (outFs.exists(outputPath)){
+            System.out.println("the output already Exists");
+            outFs.delete(outputPath,true);
+        }
 
         FileInputFormat.addInputPath(job, inputPath);
         FileOutputFormat.setOutputPath(job, outputPath);
@@ -245,12 +227,11 @@ public class compressFile {
         //reduce排序
         job.setGroupingComparatorClass(textComparator.class);
 
-        //在Combiner阶段设置好任务对应的文件名
-//        job.setCombinerClass(compressFile.writeFileCombiner.class);
-
-        FileOutputFormat.setCompressOutput(job, true);  //job使用压缩
-        FileOutputFormat.setOutputCompressorClass(job, GzipCodec.class); //设置压缩格式
-        job.setOutputFormatClass(MyfileOutputFormat.class);
+        if (args[3].equals("zip")){
+            FileOutputFormat.setCompressOutput(job, true);  //job使用压缩
+            FileOutputFormat.setOutputCompressorClass(job, GzipCodec.class); //设置压缩格式
+        }
+//        job.setOutputFormatClass(MyfileOutputFormat.class);
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }

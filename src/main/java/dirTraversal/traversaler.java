@@ -152,8 +152,8 @@ class taskQueueRunner implements Runnable{
 //                System.out.println(dir);
             }
         }catch (InterruptedException e){
-            System.out.println("Runner off");
-            e.printStackTrace();
+//            System.out.println("Runner off");
+//            e.printStackTrace();
         }
 
     }
@@ -161,23 +161,23 @@ class taskQueueRunner implements Runnable{
 
 
 class testMain{
-//    public static void main(String[] args) throws Exception {
-//        ExecutorService exec = Executors.newCachedThreadPool();
-//        taskQueue tq = new taskQueue();
-//        taskQueueRunner.setDestHdfs(args[0]);
-//        try{
-//            traversaler.initDestFs(args[0],tq);
-////            traversalTask.initDestFs(args[0],tq);
-//        }catch (Exception e){
-//            e.printStackTrace();
-//        }
-//        traversaler rt = traversaler.generateTraversal(new Path("/"));
-//        exec.execute(new taskQueueRunner(tq));
-//        exec.execute(new taskQueueRunner(tq));
-//        exec.execute(new taskQueueRunner(tq));
-//        exec.execute(new taskQueueRunner(tq));
-//
-//        TimeUnit.SECONDS.sleep(5);
-//        exec.shutdownNow();
-//    }
+    public static void main(String[] args) throws Exception {
+        ExecutorService exec = Executors.newCachedThreadPool();
+        taskQueue tq = new taskQueue();
+        taskQueueRunner.setDestHdfs(args[0]);
+        try{
+            traversaler.initDestFs(args[0],tq);
+//            traversalTask.initDestFs(args[0],tq);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        traversaler rt = traversaler.generateTraversal(new Path("/"));
+        exec.execute(new taskQueueRunner(tq));
+        exec.execute(new taskQueueRunner(tq));
+        exec.execute(new taskQueueRunner(tq));
+        exec.execute(new taskQueueRunner(tq));
+
+        TimeUnit.SECONDS.sleep(5);
+        exec.shutdownNow();
+    }
 }

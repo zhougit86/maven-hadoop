@@ -30,7 +30,7 @@
               </filters>
               <transformers>
                 <transformer>
-                  <mainClass>compressFile.compressFile</mainClass>
+                  <mainClass>avroTrial.avroTrial</mainClass>
                 </transformer>
                 <transformer>
                   <resource>reference.conf</resource>
