@@ -1,17 +1,23 @@
 package dirTraversal;
 
+import dirTraversal.model.Dir;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.util.Time;
+import org.apache.log4j.BasicConfigurator;
+
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+class taskQueue extends LinkedBlockingQueue<traversalTask> {}
+
 
 /**
  * Created by zhou1 on 2018/10/26.
@@ -23,17 +29,19 @@ public class traversaler {
     private static String DestHdfs;
     private static FileSystem fs;
     private static taskQueue tq;
+    private static sqlQueue sq;
 
     private FileStatus fStatus;
     // /节点的FileStatus是nil
     private traversaler parentNode;
     private volatile ArrayList<traversaler> kidNodes;
 
-    public static void initDestFs(String dest, taskQueue taskQueue) throws Exception{
+    public static void initDestFs(String dest, taskQueue taskQueue, sqlQueue sqlQueue) throws Exception{
         DestHdfs = dest;
         fs = FileSystem.get(new URI(DestHdfs),conf);
 
         tq = taskQueue;
+        sq = sqlQueue;
     }
 
     public void generateChild(){
@@ -41,8 +49,12 @@ public class traversaler {
             FileStatus[] listStatus = fs.listStatus(this.fStatus.getPath());
             for (FileStatus f: listStatus){
                 String Path = f.getPath().toString();
-                System.out.println(Path.substring(Path.indexOf(DestHdfs)+DestHdfs.length()));
-
+                Dir ddd = Dir.newDirFromFileStatus(f);
+                sq.put(ddd);
+//                System.out.println(ddd);
+//                System.out.println(Path.substring(Path.indexOf(DestHdfs)+DestHdfs.length()));
+//                System.out.println( new Date(f.getModificationTime()) );
+//                System.out.println(f.getModificationTime());
 //                System.out.println(f.getPath().getParent()+"---"+f.getPath().getName());
 //                System.out.println(this.kidNodes);
                 synchronized (this.kidNodes){
@@ -122,8 +134,6 @@ class traversalTask{
     }
 }
 
-class taskQueue extends LinkedBlockingQueue<traversalTask> {}
-
 class taskQueueRunner implements Runnable{
     private taskQueue finishedQueue;
     private int counter = 0;
@@ -162,16 +172,23 @@ class taskQueueRunner implements Runnable{
 
 class testMain{
     public static void main(String[] args) throws Exception {
+
+//        BasicConfigurator.configure(); //自动快速地使用缺省Log4j环境。
+
         ExecutorService exec = Executors.newCachedThreadPool();
         taskQueue tq = new taskQueue();
+        sqlQueue sq = new sqlQueue();
         taskQueueRunner.setDestHdfs(args[0]);
         try{
-            traversaler.initDestFs(args[0],tq);
+            traversaler.initDestFs(args[0],tq,sq);
 //            traversalTask.initDestFs(args[0],tq);
         }catch (Exception e){
             e.printStackTrace();
         }
+        batisWrite.setQueue(sq);
+
         traversaler rt = traversaler.generateTraversal(new Path("/"));
+        exec.execute(new batisWrite());
         exec.execute(new taskQueueRunner(tq));
         exec.execute(new taskQueueRunner(tq));
         exec.execute(new taskQueueRunner(tq));
