@@ -16,7 +16,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-class taskQueue extends LinkedBlockingQueue<traversalTask> {}
+class taskQueue extends LinkedBlockingQueue<traversalTask> {
+    public taskQueue(int i){
+        super(i);
+    }
+    public taskQueue(){
+        super();
+    }
+}
 
 
 /**
@@ -49,8 +56,20 @@ public class traversaler {
             FileStatus[] listStatus = fs.listStatus(this.fStatus.getPath());
             for (FileStatus f: listStatus){
                 String Path = f.getPath().toString();
+//                System.out.println(f);
                 Dir ddd = Dir.newDirFromFileStatus(f);
-                sq.put(ddd);
+                while (!sq.offer(ddd)){
+                    System.out.println("put sql fails");
+                    TimeUnit.MILLISECONDS.sleep(500);
+                }
+//                try{
+//                    sq.put(ddd);
+//                }catch (InterruptedException e){
+//                    System.out.println("put dir fails");
+//                    TimeUnit.SECONDS.sleep(3);
+//                    sq.put(ddd);
+//                }
+
 //                System.out.println(ddd);
 //                System.out.println(Path.substring(Path.indexOf(DestHdfs)+DestHdfs.length()));
 //                System.out.println( new Date(f.getModificationTime()) );
@@ -83,7 +102,11 @@ public class traversaler {
             return t;
         }
         try{
-            tq.put(new traversalTask(t));
+            while (!tq.offer(new traversalTask(t))){
+                System.out.println("put dir fails"+ t.fStatus.toString());
+                TimeUnit.MILLISECONDS.sleep(500);
+            }
+//            tq.put(new traversalTask(t));
         }catch (InterruptedException e){
             e.printStackTrace();
         }
@@ -103,7 +126,10 @@ public class traversaler {
     public static traversaler generateTraversal(Path selfPath){
         traversaler t = new traversaler(selfPath);
         try{
-            tq.put(new traversalTask(t));
+            while (!tq.offer(new traversalTask(t))){
+                System.out.println("put dir fails" + t.fStatus.toString());
+                TimeUnit.MILLISECONDS.sleep(500);
+            }
         }catch (InterruptedException e){
             e.printStackTrace();
         }
@@ -155,7 +181,9 @@ class taskQueueRunner implements Runnable{
                 traversalTask t = finishedQueue.take();
                 t.run();
 
+
                 counter++;
+                System.out.println(this.toString()+":" + counter);
 //                System.out.printf("counter: %d __",counter);
 //                System.out.printf("# by Id: %d __",RunnerId);
 //                System.out.printf("the time is %s __", Time.now());
@@ -163,7 +191,7 @@ class taskQueueRunner implements Runnable{
             }
         }catch (InterruptedException e){
 //            System.out.println("Runner off");
-//            e.printStackTrace();
+            e.printStackTrace();
         }
 
     }
@@ -176,8 +204,9 @@ class testMain{
 //        BasicConfigurator.configure(); //自动快速地使用缺省Log4j环境。
 
         ExecutorService exec = Executors.newCachedThreadPool();
-        taskQueue tq = new taskQueue();
-        sqlQueue sq = new sqlQueue();
+        taskQueue tq = new taskQueue(10);
+        sqlQueue sq = new sqlQueue(10);
+        endNotifyQueue endQ = new endNotifyQueue(10);
         taskQueueRunner.setDestHdfs(args[0]);
         try{
             traversaler.initDestFs(args[0],tq,sq);
@@ -185,16 +214,19 @@ class testMain{
         }catch (Exception e){
             e.printStackTrace();
         }
-        batisWrite.setQueue(sq);
+        batisWrite.setQueue(sq,endQ);
 
-        traversaler rt = traversaler.generateTraversal(new Path("/"));
+        traversaler rt = traversaler.generateTraversal(new Path(args[1]));
         exec.execute(new batisWrite());
-        exec.execute(new taskQueueRunner(tq));
-        exec.execute(new taskQueueRunner(tq));
-        exec.execute(new taskQueueRunner(tq));
-        exec.execute(new taskQueueRunner(tq));
 
-        TimeUnit.SECONDS.sleep(5);
+        for (int i =0;i<Integer.parseInt(args[2]);i++){
+            exec.execute(new taskQueueRunner(tq));
+        }
+
+
+//        System.out.println(endQ.isEmpty());
+        TimeUnit.SECONDS.sleep(30);
+
         exec.shutdownNow();
     }
 }

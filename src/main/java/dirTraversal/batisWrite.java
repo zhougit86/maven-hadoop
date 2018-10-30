@@ -29,31 +29,41 @@ public class batisWrite implements Runnable{
     private static sqlQueue sq;
     private static SqlSession session ;
     private static DirDao dirMapper;
+    private static endNotifyQueue endQ;
 
     static {
         try {
             reader = Resources.getResourceAsReader("mybatis-config.xml");
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+            session = sqlSessionFactory.openSession();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        session = sqlSessionFactory.openSession();
+        System.out.println("sql init ok");
+
         dirMapper = session.getMapper(DirDao.class);
     }
 
     public static SqlSessionFactory getSqlSessionFactory() {
         return sqlSessionFactory;
     }
-    public static void setQueue(sqlQueue sq1){
+    public static void setQueue(sqlQueue sq1,endNotifyQueue endQ1){
         sq = sq1;
+        endQ = endQ1;
     }
     public void run() {
+        int countForCommit = 0;
         try {
             while (!Thread.interrupted()) {
                 Dir t = sq.take();
                 try {
                     dirMapper.insertDir(t);
-                    session.commit();
+                    countForCommit++;
+                    System.out.println(countForCommit);
+                    if(countForCommit==100){
+                        countForCommit=0;
+                        session.commit();
+                    }
                 } catch (Exception e) {
                     session.rollback();
                     e.printStackTrace();

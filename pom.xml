@@ -174,8 +174,8 @@
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <!--<mainClass>compressFile.compressFile</mainClass>-->
-                                    <!--<mainClass>dirTraversal.testMain</mainClass>-->
-                                    <mainClass>avroTrial.avroTrial</mainClass>
+                                    <mainClass>dirTraversal.testMain</mainClass>
+                                    <!--<mainClass>avroTrial.avroTrial</mainClass>-->
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>reference.conf</resource>
