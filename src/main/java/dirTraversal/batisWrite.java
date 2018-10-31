@@ -1,5 +1,6 @@
 package dirTraversal;
 
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.Configuration;
@@ -22,7 +23,7 @@ import java.util.Map;
  * Created by zhou1 on 2018/10/30.
  */
 
-
+@Deprecated
 public class batisWrite implements Runnable{
     private static SqlSessionFactory sqlSessionFactory;
     private static Reader reader;
@@ -57,21 +58,25 @@ public class batisWrite implements Runnable{
             while (!Thread.interrupted()) {
                 Dir t = sq.take();
 //                System.out.println("in the Writer:" +t);
-//                try {
-//                    dirMapper.insertDir(t);
-//                    countForCommit++;
-//                    System.out.println(countForCommit);
-//                    if(countForCommit==20){
-//                        countForCommit=0;
-//                        session.commit();
-//                    }
-//                } catch (Exception e) {
-//                    session.rollback();
-//                    e.printStackTrace();
-//                }
+                try {
+                    dirMapper.insertDir(t);
+                    countForCommit++;
+
+                    if(countForCommit==70){
+                        System.out.println(countForCommit);
+                        countForCommit=0;
+                        session.commit();
+                    }
+                    if (sq.size()==0){
+                        System.out.println("finally");
+                        session.commit();
+                    }
+                }catch (Exception e) {
+                    System.out.println("failure");
+                    e.printStackTrace();
+                }
             }
         } catch (InterruptedException e) {
-            System.out.println("Writer");
             e.printStackTrace();
             session.close();
         }

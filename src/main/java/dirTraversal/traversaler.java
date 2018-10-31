@@ -1,14 +1,17 @@
 package dirTraversal;
 
 import dirTraversal.model.Dir;
+import org.apache.commons.net.ntp.TimeStamp;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.Time;
 import org.apache.log4j.BasicConfigurator;
 
 
 import java.net.URI;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
@@ -32,19 +35,18 @@ public class traversaler {
     private static sqlQueue sq;
     public FileStatus fStatus;
     // /节点的FileStatus是nil
-    private traversaler parentNode;
+//    private traversaler parentNode;
 
-    public static void initDestFs(String dest, taskQueue taskQueue, sqlQueue sqlQueue) throws Exception{
+    public static void initDestFs(String dest, taskQueue taskQueue) throws Exception{
         DestHdfs = dest;
         fs = FileSystem.get(new URI(DestHdfs),conf);
 
         tq = taskQueue;
-        sq = sqlQueue;
     }
 
-    public traversaler(FileStatus fStatus, traversaler parentNode){
+    public traversaler(FileStatus fStatus){
         this.fStatus = fStatus;
-        this.parentNode = parentNode;
+//        this.parentNode = parentNode;
     }
 
 //    public static traversaler generateTraversal(FileStatus fStatus, traversaler parentNode){
@@ -107,12 +109,10 @@ class testMain{
 //        BasicConfigurator.configure(); //自动快速地使用缺省Log4j环境。
 
         ExecutorService exec = Executors.newCachedThreadPool();
-        taskQueue tq = new taskQueue(100);
-        sqlQueue sq = new sqlQueue(10);
-        endNotifyQueue endQ = new endNotifyQueue(10);
+        taskQueue tq = new taskQueue(500*Integer.parseInt(args[2]));
         taskQueueRunner.setDestHdfs(args[0]);
         try{
-            traversaler.initDestFs(args[0],tq,sq);
+            traversaler.initDestFs(args[0],tq);
 //            traversalTask.initDestFs(args[0],tq);
         }catch (Exception e){
             e.printStackTrace();
@@ -120,17 +120,37 @@ class testMain{
 
 
         traversaler rt = traversaler.generateInitTraversal(new Path(args[1]));
-
-        batisWrite.setQueue(sq,endQ);
-        exec.execute(new batisWrite());
+        taskQueueRunner.setNumT(Integer.parseInt(args[2]));
+//        batisWrite.setQueue(sq,endQ);
+//        exec.execute(new batisWrite());
         for (int i =0;i<Integer.parseInt(args[2]);i++){
-            exec.execute(new taskQueueRunner(tq,sq));
+            exec.execute(new taskQueueRunner(tq));
         }
 
 
 //        System.out.println(endQ.isEmpty());
-        TimeUnit.SECONDS.sleep(30);
+        TimeUnit.SECONDS.sleep(13000);
 
         exec.shutdownNow();
+    }
+}
+
+class tRun implements Runnable{
+    public void run(){
+        while (!Thread.interrupted()) {
+
+        }
+        System.out.println("haha");
+    }
+}
+
+class testMain2{
+    public static void main(String[] args){
+        ExecutorService exec = Executors.newCachedThreadPool();
+        exec.execute(new tRun());
+        exec.shutdownNow();
+        System.out.println(Time.now());
+        System.out.println(new Timestamp(Time.now() - 2*86400000L));
+
     }
 }
