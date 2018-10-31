@@ -56,12 +56,15 @@ public class traversaler {
             FileStatus[] listStatus = fs.listStatus(this.fStatus.getPath());
             for (FileStatus f: listStatus){
                 String Path = f.getPath().toString();
-//                System.out.println(f);
+                System.out.println("running"+Path);
                 Dir ddd = Dir.newDirFromFileStatus(f);
-                while (!sq.offer(ddd)){
+                while (sq.size()>=5){
                     System.out.println("put sql fails");
+                    Thread.yield();
                     TimeUnit.MILLISECONDS.sleep(500);
                 }
+                sq.put(ddd);
+                generateTraversal(f,this);
 //                try{
 //                    sq.put(ddd);
 //                }catch (InterruptedException e){
@@ -76,9 +79,9 @@ public class traversaler {
 //                System.out.println(f.getModificationTime());
 //                System.out.println(f.getPath().getParent()+"---"+f.getPath().getName());
 //                System.out.println(this.kidNodes);
-                synchronized (this.kidNodes){
-                    this.kidNodes.add(generateTraversal(f,this));
-                }
+//                synchronized (this.kidNodes){
+//                    this.kidNodes.add(generateTraversal(f,this));
+//                }
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -102,12 +105,14 @@ public class traversaler {
             return t;
         }
         try{
-            while (!tq.offer(new traversalTask(t))){
-                System.out.println("put dir fails"+ t.fStatus.toString());
+            while (tq.size()>=900){
+                System.out.println(tq.size()+"this fails:" + t.getfStatus().getPath().toString());
+                Thread.yield();
                 TimeUnit.MILLISECONDS.sleep(500);
             }
+            tq.put(new traversalTask(t));
 //            tq.put(new traversalTask(t));
-        }catch (InterruptedException e){
+        }catch (Exception e){
             e.printStackTrace();
         }
         return t;
@@ -126,10 +131,12 @@ public class traversaler {
     public static traversaler generateTraversal(Path selfPath){
         traversaler t = new traversaler(selfPath);
         try{
-            while (!tq.offer(new traversalTask(t))){
-                System.out.println("put dir fails" + t.fStatus.toString());
+            while (tq.size()>=900){
+                System.out.println(tq.size()+"this fails:" + t.getfStatus().getPath().toString());
+                Thread.yield();
                 TimeUnit.MILLISECONDS.sleep(500);
             }
+            tq.put(new traversalTask(t));
         }catch (InterruptedException e){
             e.printStackTrace();
         }
@@ -176,14 +183,13 @@ class taskQueueRunner implements Runnable{
         finishedQueue = tq;
     }
     public void run(){
+        System.out.println("i am :"+ this);
         try{
             while (!Thread.interrupted()) {
                 traversalTask t = finishedQueue.take();
-                t.run();
-
-
                 counter++;
                 System.out.println(this.toString()+":" + counter);
+                t.run();
 //                System.out.printf("counter: %d __",counter);
 //                System.out.printf("# by Id: %d __",RunnerId);
 //                System.out.printf("the time is %s __", Time.now());
@@ -204,7 +210,7 @@ class testMain{
 //        BasicConfigurator.configure(); //自动快速地使用缺省Log4j环境。
 
         ExecutorService exec = Executors.newCachedThreadPool();
-        taskQueue tq = new taskQueue(10);
+        taskQueue tq = new taskQueue(1000);
         sqlQueue sq = new sqlQueue(10);
         endNotifyQueue endQ = new endNotifyQueue(10);
         taskQueueRunner.setDestHdfs(args[0]);

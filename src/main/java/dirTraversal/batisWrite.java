@@ -56,22 +56,23 @@ public class batisWrite implements Runnable{
         try {
             while (!Thread.interrupted()) {
                 Dir t = sq.take();
-                try {
-                    dirMapper.insertDir(t);
-                    countForCommit++;
-                    System.out.println(countForCommit);
-                    if(countForCommit==100){
-                        countForCommit=0;
-                        session.commit();
-                    }
-                } catch (Exception e) {
-                    session.rollback();
-                    e.printStackTrace();
-                }
+//                System.out.println("in the Writer:" +t);
+//                try {
+//                    dirMapper.insertDir(t);
+//                    countForCommit++;
+//                    System.out.println(countForCommit);
+//                    if(countForCommit==20){
+//                        countForCommit=0;
+//                        session.commit();
+//                    }
+//                } catch (Exception e) {
+//                    session.rollback();
+//                    e.printStackTrace();
+//                }
             }
         } catch (InterruptedException e) {
-//            System.out.println("Runner off");
-//            e.printStackTrace();
+            System.out.println("Writer");
+            e.printStackTrace();
             session.close();
         }
     }

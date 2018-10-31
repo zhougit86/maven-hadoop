@@ -14,6 +14,11 @@ public class Dir {
     private Timestamp mod_Time;
     private String owner;
 
+    @Override
+    public String toString(){
+        return path;
+    }
+
     public static Dir newDirFromFileStatus(FileStatus fState){
         Dir d = new Dir();
         d.setPath(fState.getPath().toString());
