@@ -7,8 +7,6 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import dirTraversal.model.User;
-import dirTraversal.dao.UserDao;
 
 import dirTraversal.model.Dir;
 import dirTraversal.dao.DirDao;
