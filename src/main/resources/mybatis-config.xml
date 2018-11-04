@@ -6,7 +6,7 @@
     <!--加载连接数据库的基本信息文件-->
     <properties resource="jdbc.properties"></properties>
     <typeAliases>
-        <typeAlias alias="user" type="dirTraversal.model.User"/>
+        <!--<typeAlias alias="user" type="dirTraversal.model.User"/>-->
         <typeAlias alias="dir" type="dirTraversal.model.Dir"/>
     </typeAliases>
     <environments default="development">

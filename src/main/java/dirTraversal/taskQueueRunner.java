@@ -15,6 +15,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -29,9 +30,9 @@ class taskQueueRunner implements Runnable{
     private traversaler currentHandlingT;
     private static int runningT;
 
-    private final static Configuration conf = new Configuration();
+    private final Configuration conf = new Configuration();
     private static String DestHdfs;
-    private static FileSystem fs;
+    private  FileSystem fs;
 
     private  SqlSessionFactory sqlSessionFactory;
     private  Reader reader;
@@ -56,13 +57,19 @@ class taskQueueRunner implements Runnable{
         runningT = t;
     }
 
-    public static void setDestHdfs(String dest)throws Exception{
+    public static void setDestHdfs(String dest){
         DestHdfs = dest;
-        fs = FileSystem.get(new URI(DestHdfs),conf);
     }
 
     public taskQueueRunner(taskQueue tq) {
         finishedQueue = tq;
+        try{
+            this.fs = FileSystem.get(new URI(DestHdfs),conf);
+        }catch (URISyntaxException e){
+            e.printStackTrace();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     private void writeSql(Dir ddd){

@@ -129,28 +129,60 @@ class testMain{
 
 
 //        System.out.println(endQ.isEmpty());
-        TimeUnit.SECONDS.sleep(13000);
+        TimeUnit.SECONDS.sleep(20000);
 
         exec.shutdownNow();
-    }
-}
 
-class tRun implements Runnable{
-    public void run(){
-        while (!Thread.interrupted()) {
-
+        while (!exec.awaitTermination(2, TimeUnit.SECONDS)) {
+            System.out.println("线程池没有关闭");
         }
-        System.out.println("haha");
+        System.out.println("all closed");
     }
 }
+
+//class tRun implements Runnable{
+//    public void run(){
+//        while (!Thread.interrupted()) {
+//
+//        }
+//        System.out.println("haha");
+//    }
+//}
 
 class testMain2{
-    public static void main(String[] args){
-        ExecutorService exec = Executors.newCachedThreadPool();
-        exec.execute(new tRun());
-        exec.shutdownNow();
-        System.out.println(Time.now());
-        System.out.println(new Timestamp(Time.now() - 2*86400000L));
+    public static void main(String[] args) throws InterruptedException{
+//        ExecutorService exec = Executors.newCachedThreadPool();
+//        exec.execute(new tRun());
+//        exec.shutdownNow();
+//        System.out.println(Time.now());
+//        System.out.println(new Timestamp(Time.now() - 2*86400000L));
 
+        ExecutorService exec = Executors.newCachedThreadPool();
+        simpleRunner.setDestHdfs(args[0]);
+
+        ArrayList<String> ssss = new ArrayList<String>();
+        ssss.add("/");
+        ssss.add("/warehouse");
+        ssss.add("/warehouse/dim");
+        ssss.add("/warehouse/dm");
+        ssss.add("/warehouse/dw");
+        ssss.add("/warehouse/ods");
+
+//        batisWrite.setQueue(sq,endQ);
+//        exec.execute(new batisWrite());
+        for (int i =0;i<Integer.parseInt(args[1]);i++){
+            exec.execute(new simpleRunner(args[2],ssss.get(i)));
+        }
+
+
+//        System.out.println(endQ.isEmpty());
+        TimeUnit.SECONDS.sleep(20000);
+
+        exec.shutdownNow();
+
+        while (!exec.awaitTermination(2, TimeUnit.SECONDS)) {
+            System.out.println("线程池没有关闭");
+        }
+        System.out.println("all closed");
     }
 }
