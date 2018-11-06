@@ -82,6 +82,7 @@ class taskQueueRunner implements Runnable{
     }
 
     private traversaler putWriter(FileStatus f){
+
         String Path = f.getPath().toString();
         Dir ddd = Dir.newDirFromFileStatus(f);
 //        try{

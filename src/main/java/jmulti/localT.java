@@ -21,6 +21,16 @@ import java.util.concurrent.TimeUnit;
 //委托只有在多个独立的变量，彼此之间没有关系的时候才能成立
 
 //发布变量的条件！1，线程安全，2，没有不变性约束，3，不存在不允许转换的状态
+
+
+//Syncmap的话是每个操作都加锁了，而concurrmap的话则是使用了一种lock strip的东西（类似于一种特殊的读写锁）
+//尽量使用Concurentmap
+
+
+//dequeue可以处理既是生产者又是消费者的方法
+//抛出InterruptedException的方法都是会导致阻塞的方法，拿到这个异常一般两种处理throw,Thread.currentThread().interrupt()
+//
+
 public class localT extends Thread {
     private static int globalId;
     private static CountDownLatch cl;

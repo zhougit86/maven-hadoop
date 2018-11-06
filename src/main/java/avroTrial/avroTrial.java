@@ -39,11 +39,6 @@ public class avroTrial {
             String wareHouse = "/warehouse/ods/ods_hana/bic_azodw016300/";
             String schemaDir = ".schemas/";
             String avroDir = "sdt=20180716/";
-//            Path pathAvro = new Path(wareHouse+ avroDir);
-//            FileStatus[] listStatus = fs.listStatus(pathAvro);
-//            for (FileStatus f: listStatus){
-//                System.out.println(f);
-//            }
             Path srcFile = new Path(inputPath);
             InputStream is = new BufferedInputStream(fs.open(srcFile));
 
