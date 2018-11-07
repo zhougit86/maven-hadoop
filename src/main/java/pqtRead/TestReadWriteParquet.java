@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.NumberFormat;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -50,7 +51,7 @@ import org.apache.parquet.schema.Type;
 
 public class TestReadWriteParquet  extends Configured implements Tool {
     private static final Log LOG = Log.getLog(TestReadWriteParquet.class);
-    private static final ConcurrentHashMap<Integer,String> map = new ConcurrentHashMap();
+    public static final ConcurrentHashMap<String,String> map = new ConcurrentHashMap();
 
     public static class MyfileOutputFormat<T> extends ParquetOutputFormat<T> {
         private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
@@ -128,8 +129,8 @@ public class TestReadWriteParquet  extends Configured implements Tool {
             String fileName = ((FileSplit) inputSplit).getPath().toString();
             String[] sliceList = fileName.split("/");
             String lastString = sliceList[sliceList.length-1];
-            int TaskId= context.getTaskAttemptID().getTaskID().getId();
-            LOG.info(TaskId +"____"+lastString);
+            String TaskId= context.getTaskAttemptID().toString();
+//            LOG.info(TaskId +"____"+lastString);
             map.putIfAbsent(TaskId,lastString);
         }
 
@@ -229,7 +230,6 @@ public class TestReadWriteParquet  extends Configured implements Tool {
             fileSys.delete(new Path(DestHdfs+outputFile),true);
         }
         FileOutputFormat.setOutputPath(job, new Path(DestHdfs+outputFile));
-
         job.waitForCompletion(true);
 
         return 0;
@@ -239,13 +239,18 @@ public class TestReadWriteParquet  extends Configured implements Tool {
         Configuration conf= new Configuration();
         conf.set("mapred.textoutputformat.ignoreseparator", "true");
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+        conf.set("mapreduce.framework.name","local");
         try {
             int res = ToolRunner.run(conf, new TestReadWriteParquet(), args);
+            for(Map.Entry<String, String> entry: TestReadWriteParquet.map.entrySet()) {
+                System.out.println(entry);
+            }
             System.exit(res);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(255);
         }
+
     }
 }
 
